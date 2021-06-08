@@ -1,29 +1,75 @@
+import matplotlib
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends._backend_tk import NavigationToolbar2Tk
+from matplotlib.figure import Figure
+
+matplotlib.use('TkAgg')
 from tkinter import *
+import random
 
-root = Tk()
-root.geometry('500x300')
+class Application(Frame):
 
-frame = Frame(root)
-frame.place(x = 25, y = 25) # Position of where you would place your listbox
+    def __init__(self, master=None):
 
-lb = Listbox(frame, width=30, height=6)
-lb.pack(side = 'left',fill = 'y' )
+        Frame.__init__(self, master)
+        matplotlib.rcParams["figure.figsize"] = [2,6]
+        self.data_set = [1,2,3,4,5,6]
+        self.initUI()
 
-scrollbar = Scrollbar(frame, orient="vertical",command=lb.yview)
-scrollbar.pack(side="right", fill="y")
+        # to assign widgets
+        self.widget = None
+        self.toolbar = None
 
-lb.config(yscrollcommand=scrollbar.set)
+    def initUI(self):
+        self.pack(fill=BOTH, expand=1)
 
-# lb1 = Listbox(frame, width=30, height=6)
-# lb1.place(x=40,y=45)
-#
-# scrollbar = Scrollbar(frame, orient="vertical",command=lb1.yview)
-# scrollbar.pack(side="right", fill="y")
-#
-# lb1.config(yscrollcommand=scrollbar.set)
+        plotbutton = Button(self, text="Plot Data", command=lambda: self.create_plot(self.data_set))
+        plotbutton.place(x=300, y=600)
 
-for i in range(10):
-    lb.insert(END, 'test'+str(i))
-    # lb1.insert(END, 'test' + str(i))
+        quitbutton = Button(self, text="Quit", command=self.quit)
+        quitbutton.place(x=400, y=600)
 
-root.mainloop()
+
+    def create_plot(self, dataset):
+
+        # remove old widgets
+        if self.widget:
+            self.widget.destroy()
+
+        if self.toolbar:
+            self.toolbar.destroy()
+
+        # create new elements
+
+        plt = Figure(figsize=(4, 4), dpi=100)
+
+        a = plt.add_subplot(211)
+        a.plot(dataset, '-o', label="Main response(ms)")
+        a.set_ylabel("milliseconds")
+        a.set_title("plot")
+
+        canvas = FigureCanvasTkAgg(plt, self)
+
+        self.toolbar = NavigationToolbar2Tk(canvas, self)
+        #toolbar.update()
+
+        self.widget = canvas.get_tk_widget()
+        self.widget.pack(fill=BOTH)
+
+        #self.toolbars = canvas._tkcanvas
+        #self.toolbars.pack(fill=BOTH)
+
+        # generate a random list of 6 numbers for sake of simplicity, for the next plot
+        self.data_set = random.sample(range(30), 6)
+
+
+def main():
+
+    root = Tk()
+    root.wm_title("generic app")
+    root.geometry("800x700+100+100")
+
+    app = Application(master=root)
+    app.mainloop()
+
+main()

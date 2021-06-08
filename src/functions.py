@@ -1,7 +1,18 @@
-from tkinter import END
+import math
+
+################################################################
+# important points
+# Single data and set data is imported as numpy array from any format file - needs to taken care operations according to ndarray
+################################################################
 
 import scipy.signal
+import seaborn as sns
+import pandas as pd
 import sklearn
+import numpy as np
+import matplotlib.pyplot as plt
+
+from tkinter import END
 from sklearn import svm
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
@@ -10,68 +21,75 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-import numpy as np
 from tkinter import simpledialog
-import matplotlib.pyplot as plt
 from spectres import spectres
 
-
 plt.style.use('seaborn-white')
-import seaborn as sns
-import pandas as pd
 
 
-class Other_fuc(object):
+class Functions(object):
     def __init__(self, inverse_gui):
-        self.inverse_gui = inverse_gui                          # initailizing the inverse_gui class
+        self.inverse_gui = inverse_gui  # initailizing the inverse_gui class
 
     def tx2abs(self):
-        d1 = self.inverse_gui                                   # creating object for inverse_gui so that we can access all the variables and functions from inverse_gui class
+        d1 = self.inverse_gui  # creating object for inverse_gui so that we can access all the variables and functions from inverse_gui class
         if d1.choice == 1:
             WL = d1.wavelength
             data = d1.spectra
-            abs_spectra = -np.log10(data)                       # apply negetive log base 10 to convert tx to abs
-            d1.plot_fig(WL,abs_spectra)
-            k = d1.listval                                      # get current listval
-            d1.spec_data.append([WL,abs_spectra])               # update generated data to listbox
-            d1.listboxitems.append(d1.indexselected+'_Absorbance')
+            if np.mean(data)>10:
+                abs_spectra = 2-np.log10(data)  # apply negetive log base 10 to convert tx to abs
+            else:
+                abs_spectra = -np.log10(data)  # apply negetive log base 10 to convert tx to abs
+            d1.plot_fig(WL, abs_spectra)
+            k = d1.listval  # get current listval
+            d1.spec_wl_data.append([WL, abs_spectra])  # update generated data to listbox
+            d1.listboxitems.append(d1.indexselected + '_Absorbance')
             d1.listbox.insert(END, d1.listboxitems[k])
-            d1.listval = k+1                                    # increment listval
+            d1.listval = k + 1  # increment listval
         elif d1.choice == 2:
             WL = d1.wavelength_set
-            data= d1.spectra_set
+            data = d1.spectra_set
             label = d1.label
-            abs_spectra = -np.log10(data)
-            d1.plot_fig_dataset(WL,abs_spectra,None,label="Absorbance spectra")
-            k=d1.listval_set                                                                # get the current listval set
-            d1.spec_data_set.append([WL, abs_spectra,label])                                # update generated dataset to listboxset
-            d1.listboxitems_set.append(d1.indexselected+'_Absorbance')
+            if np.mean(data)>10:
+                abs_spectra = 2-np.log10(data)  # apply negetive log base 10 to convert tx to abs
+            else:
+                abs_spectra = -np.log10(data)  # apply negetive log base 10 to convert tx to abs
+            k = d1.listval_set  # get the current listval set
+            d1.spec_wl_data_set.append([WL, abs_spectra, label])  # update generated dataset to listboxset
+            d1.plot_fig_dataset(WL, abs_spectra, label='Absorbance spectra')
+            d1.listboxitems_set.append(d1.indexselected + '_Absorbance')
             d1.listbox_set.insert(END, d1.listboxitems_set[k])
-            d1.listval_set = k+1                                                            # increment the listvalset
+            d1.listval_set = k + 1  # increment the listvalset
 
     def abs2tx(self):
         d1 = self.inverse_gui
         if d1.choice == 1:
             WL = d1.wavelength
             data = d1.spectra
-            abs_spectra = np.power(10, -data)                                                   # equation to convert the abs to tx
-            d1.plot_fig(WL,abs_spectra)
+            if np.mean(data)>10:
+                tx_spectra = np.power(10,2) - np.power(10, -data)  # equation to convert the abs to tx
+            else:
+                tx_spectra = np.power(10, -data)  # equation to convert the abs to tx
+            d1.plot_fig(WL, tx_spectra)
             k = d1.listval
-            d1.spec_data.append([WL,abs_spectra])
-            d1.listboxitems.append(d1.indexselected+'_transmittance')
+            d1.spec_wl_data.append([WL, tx_spectra])
+            d1.listboxitems.append(d1.indexselected + '_transmittance')
             d1.listbox.insert(END, d1.listboxitems[k])
-            d1.listval = k+1
+            d1.listval = k + 1
         elif d1.choice == 2:
             WL = d1.wavelength_set
-            data= d1.spectra_set
+            data = d1.spectra_set
             label = d1.label
-            abs_spectra = np.power(-data,10)
-            d1.plot_fig_dataset(WL,abs_spectra,None,label='Transmittance spectra')
-            k=d1.listval_set
-            d1.spec_data_set.append([WL, abs_spectra,label])
-            d1.listboxitems_set.append(d1.indexselected+'_transmittance')
+            if np.mean(data) > 10:
+                tx_spectra = np.power(10, 2) - np.power(10, -data)  # equation to convert the abs to tx
+            else:
+                tx_spectra = np.power(10, -data)  # equation to convert the abs to tx
+            d1.plot_fig_dataset(WL, tx_spectra, label='Transmittance spectra')
+            k = d1.listval_set
+            d1.spec_wl_data_set.append([WL, tx_spectra, label])
+            d1.listboxitems_set.append(d1.indexselected + '_transmittance')
             d1.listbox_set.insert(END, d1.listboxitems_set[k])
-            d1.listval_set = k+1
+            d1.listval_set = k + 1
 
     def pca(self):
         d1 = self.inverse_gui
@@ -80,16 +98,17 @@ class Other_fuc(object):
             WL = d1.wavelength_set
             data = d1.spectra_set
             label = d1.label
-            data = data.T                                                                # transpose the data and label
+            data = data.T  # transpose the data and label
             label = label.T
-            data = StandardScaler().fit_transform(data)                                 # fit and transform the data
-            ncomp = simpledialog.askinteger("input", "Enter the number of components")                # ask user the number of PCA components
+            data = StandardScaler().fit_transform(data)  # fit and transform the data
+            ncomp = simpledialog.askinteger("input",
+                                            "Enter the number of components")  # ask user the number of PCA components
             for i in range(0, ncomp, 1):
-                pc_column.append('PC' + str(i))                                             # creating the column of PC's
+                pc_column.append('PC' + str(i))  # creating the column of PC's
             print(pc_column)
-            pca = PCA(n_components=ncomp)                                                   # call PCA inuilt function
-            pc = pca.fit_transform(data)                                                    # apply PCA object on the data
-            plt.clf()                                                                       # clear all the plots
+            pca = PCA(n_components=ncomp)  # call PCA inuilt function
+            pc = pca.fit_transform(data)  # apply PCA object on the data
+            plt.clf()  # clear all the plots
             plt.subplot(221)
             plt.plot(np.cumsum(pca.explained_variance_ratio_))
             plt.xlabel('number of components')
@@ -113,18 +132,17 @@ class Other_fuc(object):
                        legend=True,
                        scatter_kws={"s": 80});
         else:
-            simpledialog.messagebox.showerror("Error","SNV need batch data to function!")
+            simpledialog.messagebox.showerror("Error", "PCA need batch data to function!")
 
-# function to get the accuracy of training of data
-    def getAccuracy(self,testSet, predictions):
+    # function to get the accuracy of training of data
+    def getAccuracy(self, testSet, predictions):
         correct = 0
         for x in range(len(testSet)):
             if testSet[x] == predictions[x]:
                 correct += 1
         return (correct / float(len(testSet))) * 100.0
 
-
-# function to apply logistic regression on the data set.
+    # function to apply logistic regression on the data set.
     def LR(self):
         d1 = self.inverse_gui
         if d1.choice == 2:
@@ -133,14 +151,17 @@ class Other_fuc(object):
             label = d1.label
             label = label.T
             wavelength = d1.wavelength_set
-            test_size = simpledialog.askinteger("input", "Enter the test size in percentage(out of 100)")     # ask user the percent of test split
-            X_train, X_test, y_train, y_test = train_test_split(data, label, test_size=test_size / 100)         # train_test_split
+            test_size = simpledialog.askinteger("input",
+                                                "Enter the test size in percentage(out of 100)")  # ask user the percent of test split
+            X_train, X_test, y_train, y_test = train_test_split(data, label,
+                                                                test_size=test_size / 100)  # train_test_split
             print(X_train.shape, y_train.shape)
             print(X_test.shape, y_test.shape)
 
-            clf = LogisticRegression(random_state=0, solver='lbfgs', multi_class='multinomial')            # craeting object for LR
+            clf = LogisticRegression(random_state=0, solver='lbfgs',
+                                     multi_class='multinomial')  # craeting object for LR
 
-            clf.fit(X_train, y_train)                                                                       # fitting data
+            clf.fit(X_train, y_train)  # fitting data
 
             print(clf)
             # matrix = clf.densify()
@@ -150,9 +171,11 @@ class Other_fuc(object):
             print(pd.crosstab(y_test[0], preds, rownames=['Actual Result'], colnames=['Predicted Result']))
             accuracy = self.getAccuracy(list(y_test[0]), preds)
             print('Accuracy: ' + repr(accuracy) + '%')
-            d1.Result.insert(END, pd.crosstab(y_test[0], preds, rownames=['Actual Result'],colnames=['Predicted Result']))          # print decision matrix on result section
-            d1.Result.insert(END,'\n')
-            d1.Result.insert(END, 'Accuracy: ' + repr(accuracy) + '%')                                                                  # pint the accuracy of algorithm in result section
+            d1.Result.insert(END, pd.crosstab(y_test[0], preds, rownames=['Actual Result'],
+                                              colnames=['Predicted Result']))  # print decision matrix on result section
+            d1.Result.insert(END, '\n')
+            d1.Result.insert(END,
+                             'Accuracy: ' + repr(accuracy) + '%')  # pint the accuracy of algorithm in result section
         else:
             simpledialog.messagebox.showerror("Error", "LR need batch data to function!")
 
@@ -169,8 +192,8 @@ class Other_fuc(object):
             print(X_train.shape, y_train.shape)
             print(X_test.shape, y_test.shape)
 
-            clf = KNeighborsClassifier(n_neighbors=6, weights='distance', algorithm='auto', leaf_size=20, p=2, metric='minkowski',n_jobs=2)
-
+            clf = KNeighborsClassifier(n_neighbors=6, weights='distance', algorithm='auto', leaf_size=20, p=2,
+                                       metric='minkowski', n_jobs=2)
 
             clf.fit(X_train, y_train)
 
@@ -182,8 +205,9 @@ class Other_fuc(object):
             accuracy = self.getAccuracy(list(y_test[0]), preds)
             print('Accuracy: ' + repr(accuracy) + '%')
             d1.Result.delete(1.0, END)
-            d1.Result.insert(END, pd.crosstab(y_test[0], preds, rownames=['Actual Result'],colnames=['Predicted Result']))
-            d1.Result.insert(END,'\n')
+            d1.Result.insert(END,
+                             pd.crosstab(y_test[0], preds, rownames=['Actual Result'], colnames=['Predicted Result']))
+            d1.Result.insert(END, '\n')
             d1.Result.insert(END, 'Accuracy: ' + repr(accuracy) + '%')
         else:
             simpledialog.messagebox.showerror("Error", "KNN need batch data to function!")
@@ -267,7 +291,6 @@ class Other_fuc(object):
 
             clf = RandomForestClassifier(n_jobs=2, random_state=0)
 
-
             clf.fit(X_train, y_train)
 
             # matrix = clf.densify()
@@ -278,8 +301,9 @@ class Other_fuc(object):
             accuracy = self.getAccuracy(list(y_test[0]), preds)
             print('Accuracy: ' + repr(accuracy) + '%')
             d1.Result.delete(1.0, END)
-            d1.Result.insert(END, pd.crosstab(y_test[0], preds, rownames=['Actual Result'],colnames=['Predicted Result']))
-            d1.Result.insert(END,'\n')
+            d1.Result.insert(END,
+                             pd.crosstab(y_test[0], preds, rownames=['Actual Result'], colnames=['Predicted Result']))
+            d1.Result.insert(END, '\n')
             d1.Result.insert(END, 'Accuracy: ' + repr(accuracy) + '%')
         else:
             simpledialog.messagebox.showerror("Error", "Random forest need batch data to function!")
@@ -289,55 +313,31 @@ class Other_fuc(object):
         if d1.choice == 1:
             wavelength = d1.wavelength
             data = d1.spectra
-            if wavelength._typ == 'dataframe':
-                wavelength = wavelength.values()
-                data = data.values
-                data = data.ravel()
-                current_resolution = wavelength[1] - wavelength[0]
-                simpledialog.messagebox.showinfo("Info", "Current resolution is " + str(current_resolution))
-                new_spectra_resolution = simpledialog.askfloat("input", "Enter the new spectral resolution")
+            current_resolution = wavelength[1] - wavelength[0]
+            simpledialog.messagebox.showinfo("Info", "Current resolution is " + str(current_resolution))
+            new_spectra_resolution = simpledialog.askfloat("input", "Enter the new spectral resolution")
 
-                start_wl = wavelength[0] + new_spectra_resolution
-                end_wl = wavelength[-1] - new_spectra_resolution
-                newgrid = np.arange(start_wl, end_wl, new_spectra_resolution) + current_resolution
+            start_wl = wavelength[0] + new_spectra_resolution
+            end_wl = wavelength[-1] - new_spectra_resolution
+            newgrid = np.arange(start_wl, end_wl, new_spectra_resolution) + current_resolution
 
-                spec_resampled = spectres(newgrid, wavelength, data, spec_errs=None)
-                plt.clf()
-                plt.plot(wavelength, data,label='Original spectra')
-                plt.plot(newgrid, spec_resampled, label='Resampled spectra')
+            spec_resampled = spectres(newgrid, wavelength, data, spec_errs=None)
+            plt.clf()
+            plt.plot(wavelength, data, label='Original spectra')
+            plt.plot(newgrid, spec_resampled, label='Resampled spectra')
 
-                k = d1.listval
-                d1.spec_data.append([newgrid, spec_resampled])
-                d1.listboxitems.append(d1.indexselected + '_Resampled')
-                d1.listbox.insert(END, d1.listboxitems[k])
-                d1.listval = k + 1
-
-            else:
-                current_resolution = wavelength[1] - wavelength[0]
-                simpledialog.messagebox.showinfo("Info", "Current resolution is " + str(current_resolution))
-                new_spectra_resolution = simpledialog.askfloat("input", "Enter the new spectral resolution")
-
-                start_wl = wavelength[0] + new_spectra_resolution
-                end_wl = wavelength[-1] - new_spectra_resolution
-                newgrid = np.arange(start_wl, end_wl, new_spectra_resolution) + current_resolution
-
-                spec_resampled = spectres(newgrid, wavelength, data, spec_errs=None)
-                plt.clf()
-                plt.plot(wavelength,data)
-                plt.plot(newgrid,spec_resampled)
-
-                k = d1.listval
-                d1.spec_data.append([newgrid, spec_resampled])
-                d1.listboxitems.append(d1.indexselected + '_Resampled')
-                d1.listbox.insert(END, d1.listboxitems[k])
-                d1.listval = k + 1
+            k = d1.listval
+            d1.spec_wl_data.append([newgrid, spec_resampled])
+            d1.listboxitems.append(f'{d1.indexselected}_Resampled_{new_spectra_resolution}')
+            d1.listbox.insert(END, d1.listboxitems[k])
+            d1.listval = k + 1
         else:
             wavelength = d1.wavelength_set
             data = d1.spectra_set
             label = d1.label
             wavelength = wavelength.values()
-            data = data.values
-            data = data.ravel()
+            # data = data.values
+            # data = data.ravel()
             current_resolution = wavelength[1] - wavelength[0]
             simpledialog.messagebox.showinfo("Info", "Current resolution is " + str(current_resolution))
             new_spectra_resolution = simpledialog.askfloat("input", "Enter the new spectral resolution")
@@ -352,11 +352,10 @@ class Other_fuc(object):
             plt.plot(newgrid, spec_resampled, label='Resampled spectra')
 
             k = d1.listval_set
-            d1.spec_data_set.append([wavelength, spec_resampled, label])
+            d1.spec_wl_data_set.append([wavelength, spec_resampled, label])
             d1.listboxitems_set.append(d1.indexselected + '_Resampled_')
             d1.listbox_set.insert(END, d1.listboxitems_set[k])
             d1.listval_set = k + 1
-
 
     def moving_average(self):
         d1 = self.inverse_gui
@@ -364,14 +363,14 @@ class Other_fuc(object):
             wavelength = d1.wavelength
             data = d1.spectra
             windowsize = simpledialog.askinteger("input", "Enter the window size of filter")
-            moving = data.rolling(window=windowsize).mean()
+            moving = pd.DataFrame(data).rolling(window=windowsize).mean()
             plt.clf()
             plt.plot(wavelength, data, label="original spectra")
             plt.plot(wavelength, moving, label="MA Smoothened Spectra")
 
             k = d1.listval
-            d1.spec_data.append([wavelength, moving])
-            d1.listboxitems.append(d1.indexselected + '_movingaverage_'+str(windowsize))
+            d1.spec_wl_data.append([wavelength, moving])
+            d1.listboxitems.append(d1.indexselected + '_movingaverage_' + str(windowsize))
             d1.listbox.insert(END, d1.listboxitems[k])
             d1.listval = k + 1
         else:
@@ -380,28 +379,26 @@ class Other_fuc(object):
             shape = data.shape
             label = d1.label
             windowsize = simpledialog.askinteger("input", "Enter the window size of filter")
-            moving = data.rolling(window=windowsize).mean()
-            data = np.reshape(data,shape)
-            moving = np.reshape(moving,shape)
+            moving = pd.DataFrame(data).rolling(window=windowsize).mean()
+            data = np.reshape(data, shape)
+            moving = np.reshape(moving, shape)
             plt.clf()
             plt.plot(wavelength, data, label="original spectra")
             plt.plot(wavelength, moving, label="MA Smoothened Spectra")
+            plt.legend()
 
             moving = pd.DataFrame(moving)
             k = d1.listval_set
-            d1.spec_data_set.append([wavelength, moving, label])
-            d1.listboxitems_set.append(d1.indexselected + '_movingaverage_'+str(windowsize))
+            d1.spec_wl_data_set.append([wavelength, moving, label])
+            d1.listboxitems_set.append(d1.indexselected + '_movingaverage_' + str(windowsize))
             d1.listbox_set.insert(END, d1.listboxitems_set[k])
             d1.listval_set = k + 1
-
 
     def gaussian_filter(self):
         d1 = self.inverse_gui
         if d1.choice == 1:
             wavelength = d1.wavelength
             data = d1.spectra
-            data = data.values
-            data = data.ravel()
             sigma = simpledialog.askinteger("input", "Enter the sigma value of the filter")
             order = simpledialog.askinteger("input", "Enter the order of the filter")
             gaussian = scipy.ndimage.gaussian_filter(data, sigma, order)
@@ -410,8 +407,8 @@ class Other_fuc(object):
             plt.plot(wavelength, gaussian, label="Gaussian filtered Spectra")
 
             k = d1.listval
-            d1.spec_data.append([wavelength, gaussian])
-            d1.listboxitems.append(d1.indexselected + '_Gaussianfilter_'+str(sigma))
+            d1.spec_wl_data.append([wavelength, gaussian])
+            d1.listboxitems.append(d1.indexselected + '_Gaussianfilter_' + str(sigma))
             d1.listbox.insert(END, d1.listboxitems[k])
             d1.listval = k + 1
         else:
@@ -419,21 +416,21 @@ class Other_fuc(object):
             data = d1.spectra_set
             shape = data.shape
             label = d1.label
-            data = data.values
-            data = data.ravel()
+            # data = data.values
+            # data = data.ravel()
             sigma = simpledialog.askinteger("input", "Enter the sigma value of the filter")
             order = simpledialog.askinteger("input", "Enter the order of the filter")
             gaussian = scipy.ndimage.gaussian_filter(data, sigma, order)
-            data = np.reshape(data,shape)
-            gaussian = np.reshape(gaussian,shape)
+            data = np.reshape(data, shape)
+            gaussian = np.reshape(gaussian, shape)
             plt.clf()
             plt.plot(wavelength, data, label="original spectra")
             plt.plot(wavelength, gaussian, label="Gaussian filtered Spectra")
 
             gaussian = pd.DataFrame(gaussian)
             k = d1.listval_set
-            d1.spec_data_set.append([wavelength, gaussian, label])
-            d1.listboxitems_set.append(d1.indexselected + '_Gaussianfilter_'+str(sigma))
+            d1.spec_wl_data_set.append([wavelength, gaussian, label])
+            d1.listboxitems_set.append(d1.indexselected + '_Gaussianfilter_' + str(sigma))
             d1.listbox_set.insert(END, d1.listboxitems_set[k])
             d1.listval_set = k + 1
 
@@ -442,143 +439,140 @@ class Other_fuc(object):
         if d1.choice == 1:
             wavelength = d1.wavelength
             data = d1.spectra
-            if wavelength._typ == 'dataframe':
-                data = data.values
-                data = data.ravel()
-                windowsize = simpledialog.askinteger("input", "Enter the window size of filter")
-                median_filter = scipy.signal.medfilt(data,windowsize)
-                plt.clf()
-                plt.plot(wavelength, data, label="Original spectra")
-                plt.plot(wavelength, median_filter, label="median Smoothened Spectra")
-                k = d1.listval
-                d1.spec_data.append([wavelength, median_filter])
-                d1.listboxitems.append(d1.indexselected + '_medianfilter_'+str(windowsize))
-                d1.listbox.insert(END, d1.listboxitems[k])
-                d1.listval = k + 1
-            else:
-                windowsize = simpledialog.askinteger("input", "Enter the window size of filter")
+            windowsize = simpledialog.askinteger("input", "Enter the window size of filter")
+            if windowsize%2 != 0:
                 median_filter = scipy.signal.medfilt(data, windowsize)
                 plt.clf()
                 plt.plot(wavelength, data, label="Original spectra")
                 plt.plot(wavelength, median_filter, label="median Smoothened Spectra")
+                plt.legend()
+                k = d1.listval
+                d1.spec_wl_data.append([wavelength, median_filter])
+                d1.listboxitems.append(d1.indexselected + '_medianfilter_' + str(windowsize))
+                d1.listbox.insert(END, d1.listboxitems[k])
+                d1.listval = k + 1
+            else:
+                 simpledialog.messagebox.showerror("ERROR",
+                                                      "window_length must be a positive odd integer!")
         else:
             wavelength = d1.wavelength_set
             data = d1.spectra_set
             shape = data.shape
-            data = data.values
-            data = data.ravel()
+            # data = data.values
+            # data = data.ravel()
             windowsize = simpledialog.askinteger("input", "Enter the window size of filter")
-            median_filter = scipy.signal.medfilt(data,windowsize)
-            data = np.reshape(data,shape)
-            median_filter = np.reshape(median_filter,shape)
-            plt.plot(wavelength, data, label="Original spectra")
-            plt.plot(wavelength, median_filter, label="Median Smoothened Spectra")
+            if windowsize % 2 != 0:
+                median_filter = scipy.signal.medfilt(data, windowsize)
+                data = np.reshape(data, shape)
+                median_filter = np.reshape(median_filter, shape)
+                plt.plot(wavelength, data, label="Original spectra")
+                plt.plot(wavelength, median_filter, label="Median Smoothened Spectra")
 
-            median_filter = pd.DataFrame(median_filter)
-            k = d1.listval_set
-            d1.spec_data_set.append([wavelength, median_filter, d1.label])
-            d1.listboxitems_set.append(d1.indexselected + '_medianfilter_'+str(windowsize))
-            d1.listbox_set.insert(END, d1.listboxitems_set[k])
-            d1.listval_set = k + 1
+                median_filter = pd.DataFrame(median_filter)
+                k = d1.listval_set
+                d1.spec_wl_data_set.append([wavelength, median_filter, d1.label])
+                d1.listboxitems_set.append(d1.indexselected + '_medianfilter_' + str(windowsize))
+                d1.listbox_set.insert(END, d1.listboxitems_set[k])
+                d1.listval_set = k + 1
+            else:
+                simpledialog.messagebox.showerror("ERROR",
+                                                  "window_length must be a positive odd integer!")
 
     def SG_filter(self):
         d1 = self.inverse_gui
         if d1.choice == 1:
             wavelength = d1.wavelength
             data = d1.spectra
-            data = data.values
-            data = data.ravel()
             windowsize = simpledialog.askinteger("input", "Enter the window length of the filter")
             polyorder = simpledialog.askinteger("input", "Enter the polyorder")
-            if (windowsize % 2 == 0) or polyorder > windowsize:
-                simpledialog.messagebox.showerror("ERROR",
-                                                  "window_length must be a positive odd integer and polyorder must be less than window_length.")
-            else:
-                sg_filter = scipy.signal.savgol_filter(data,windowsize,polyorder,deriv=0)
+            if (windowsize % 2 != 0) and polyorder < windowsize:
+                sg_filter = scipy.signal.savgol_filter(data, windowsize, polyorder, deriv=0)
                 plt.clf()
-                plt.plot(wavelength, data,label="Original spectra")
+                plt.plot(wavelength, data, label="Original spectra")
                 plt.plot(wavelength, sg_filter, label="SG smothned spectra")
 
                 k = d1.listval
-                d1.spec_data.append([wavelength, sg_filter])
-                d1.listboxitems.append(d1.indexselected + '_SGfilter_'+str(windowsize))
+                d1.spec_wl_data.append([wavelength, sg_filter])
+                d1.listboxitems.append(d1.indexselected + '_SGfilter_' + str(windowsize))
                 d1.listbox.insert(END, d1.listboxitems[k])
                 d1.listval = k + 1
+            else:
+                simpledialog.messagebox.showerror("ERROR",
+                                                  "window_length must be a positive odd integer and polyorder must be less than window_length.")
+
         else:
             wavelength = d1.wavelength_set
             data = d1.spectra_set
             shape = data.shape
-            data = data.values
-            data = data.ravel()
+            # data = data.values
+            # data = data.ravel()
             windowsize = simpledialog.askinteger("input", "Enter the window length of the filter")
             polyorder = simpledialog.askinteger("input", "Enter the polyorder")
-            if (windowsize % 2 == 0) or polyorder > windowsize:
-                simpledialog.messagebox.showerror("ERROR",
-                                                  "window_length must be a positive odd integer and polyorder must be less than window_length.")
-            else:
-                sg_filter = scipy.signal.savgol_filter(data,windowsize,polyorder,deriv=0)
-                data = np.reshape(data,shape)
-                sg_filter = np.reshape(sg_filter,shape)
+            if (windowsize % 2 != 0) and polyorder < windowsize:
+                sg_filter = scipy.signal.savgol_filter(data, windowsize, polyorder, deriv=0)
+                data = np.reshape(data, shape)
+                sg_filter = np.reshape(sg_filter, shape)
                 plt.clf()
-                plt.plot(wavelength, data, label= "Original spectra")
-                plt.plot(wavelength, sg_filter,  label="SG smothned spectra")
+                plt.plot(wavelength, data, label="Original spectra")
+                plt.plot(wavelength, sg_filter, label="SG smothned spectra")
 
                 sg_filter = pd.DataFrame(sg_filter)
                 k = d1.listval_set
-                d1.spec_data_set.append([wavelength, sg_filter, d1.label])
-                d1.listboxitems_set.append(d1.indexselected + '_SGfilter_'+str(windowsize))
+                d1.spec_wl_data_set.append([wavelength, sg_filter, d1.label])
+                d1.listboxitems_set.append(d1.indexselected + '_SGfilter_' + str(windowsize))
                 d1.listbox_set.insert(END, d1.listboxitems_set[k])
                 d1.listval_set = k + 1
+            else:
+                simpledialog.messagebox.showerror("ERROR",
+                                                  "window_length must be a positive odd integer and polyorder must be less than window_length.")
 
     def SG_deriv(self):
         d1 = self.inverse_gui
         if d1.choice == 1:
             wavelength = d1.wavelength
             data = d1.spectra
-            data = data.values
-            data = data.ravel()
             windowsize = simpledialog.askinteger("input", "Enter the window length of the filter")
             polyorder = simpledialog.askinteger("input", "Enter the polyorder")
-            deriv = simpledialog.askinteger("Input","Enter the order of the derivative")
-            if (windowsize % 2 == 0) or polyorder > windowsize:
-                simpledialog.messagebox.showerror("ERROR",
-                                                  "window_length must be a positive odd integer and polyorder must be less than window_length.")
-            else:
+            deriv = simpledialog.askinteger("Input", "Enter the order of the derivative")
+            if (windowsize % 2 != 0) and polyorder < windowsize:
                 sg_deriv = scipy.signal.savgol_filter(data, windowsize, polyorder, deriv=deriv)
                 plt.clf()
-                plt.plot(wavelength, data, label= "Original spectra")
-                plt.plot(wavelength, sg_deriv,  label="SG derivative spectra")
+                plt.plot(wavelength, data, label="Original spectra")
+                plt.plot(wavelength, sg_deriv, label="SG derivative spectra")
 
                 k = d1.listval
-                d1.spec_data.append([wavelength, sg_deriv])
-                d1.listboxitems.append(d1.indexselected + '_SGderiv_'+str(windowsize))
+                d1.spec_wl_data.append([wavelength, sg_deriv])
+                d1.listboxitems.append(d1.indexselected + '_SGderiv_' + str(windowsize))
                 d1.listbox.insert(END, d1.listboxitems[k])
                 d1.listval = k + 1
+            else:
+                simpledialog.messagebox.showerror("ERROR",
+                                                  "window_length must be a positive odd integer and polyorder must be less than window_length.")
         else:
             wavelength = d1.wavelength_set
             data = d1.spectra_set
             shape = data.shape
-            data = data.values
+            # data = data.values
             data = data.ravel()
             windowsize = simpledialog.askinteger("input", "Enter the window length of the filter")
             polyorder = simpledialog.askinteger("input", "Enter the polyorder")
             deriv = simpledialog.askinteger("Input", "Enter the order of the derivative")
-            if (windowsize % 2 == 0) or polyorder > windowsize:
-                simpledialog.messagebox.showerror("ERROR",
-                                                  "window_length must be a positive odd integer and polyorder must be less than window_length.")
-            else:
+            if (windowsize % 2 != 0) and polyorder < windowsize:
                 sg_deriv = scipy.signal.savgol_filter(data, windowsize, polyorder, deriv=deriv)
-                data = np.reshape(data,shape)
-                sg_deriv = np.reshape(sg_deriv,shape)
+                data = np.reshape(data, shape)
+                sg_deriv = np.reshape(sg_deriv, shape)
                 plt.clf()
-                plt.plot(wavelength, data, label= "Original spectra")
+                plt.plot(wavelength, data, label="Original spectra")
                 plt.plot(wavelength, sg_deriv, label="SG derivative spectra")
                 sg_deriv = pd.DataFrame(sg_deriv)
                 k = d1.listval_set
-                d1.spec_data_set.append([wavelength, sg_deriv, d1.label])
-                d1.listboxitems_set.append(d1.indexselected + '_SGderiv_'+str(windowsize))
+                d1.spec_wl_data_set.append([wavelength, sg_deriv, d1.label])
+                d1.listboxitems_set.append(d1.indexselected + '_SGderiv_' + str(windowsize))
                 d1.listbox_set.insert(END, d1.listboxitems_set[k])
                 d1.listval_set = k + 1
+            else:
+                simpledialog.messagebox.showerror("ERROR",
+                                                  "window_length must be a positive odd integer and polyorder must be less than window_length.")
 
     def snv(input_data):
 
@@ -593,7 +587,7 @@ class Other_fuc(object):
     def apply_snv(self):
         d1 = self.inverse_gui
         if d1.choice == 1:
-            simpledialog.messagebox.showerror("Error","SNV need batch data to function!")
+            simpledialog.messagebox.showerror("Error", "SNV need batch data to function!")
         else:
             wavelength = d1.wavelength_set
             data = d1.spectra_set
@@ -612,12 +606,12 @@ class Other_fuc(object):
             plt.plot(wavelength, data_snv, label="SNV applied spectra")
             data_snv = pd.DataFrame(data_snv)
             k = d1.listval_set
-            d1.spec_data_set.append([wavelength, data_snv, label])
+            d1.spec_wl_data_set.append([wavelength, data_snv, label])
             d1.listboxitems_set.append(d1.indexselected + '_SNV')
             d1.listbox_set.insert(END, d1.listboxitems_set[k])
             d1.listval_set = k + 1
 
-    def msc(self,input_data, reference=None):
+    def msc(self, input_data, reference=None):
         ''' Perform Multiplicative scatter correction'''
 
         # mean centre correction
@@ -686,7 +680,7 @@ class Other_fuc(object):
     def normalize(self):
         d1 = self.inverse_gui
         if d1.choice == 1:
-            simpledialog.messagebox.showerror("Error","SNV need batch data to function!")
+            simpledialog.messagebox.showerror("Error", "SNV need batch data to function!")
         else:
             wavelength = d1.wavelength_set
             data = d1.spectra_set
@@ -702,7 +696,7 @@ class Other_fuc(object):
             plt.plot(wavelength, Xnormalize, label="Normalized spectra")
 
             k = d1.listval_set
-            d1.spec_data_set.append([wavelength, Xnormalize, label])
+            d1.spec_wl_data_set.append([wavelength, Xnormalize, label])
             d1.listboxitems_set.append(d1.indexselected + '_Normalized')
             d1.listbox_set.insert(END, d1.listboxitems_set[k])
             d1.listval_set = k + 1
@@ -710,7 +704,7 @@ class Other_fuc(object):
     def transpose(self):
         d1 = self.inverse_gui
         if d1.choice == 1:
-            simpledialog.messagebox.showerror("Error", "SNV need batch data to function!")
+            simpledialog.messagebox.showerror("Error", "Transpose need batch data to function!")
         else:
             wavelength = d1.wavelength_set
             data = d1.spectra_set
@@ -721,11 +715,10 @@ class Other_fuc(object):
             label_t = label.T
 
             k = d1.listval_set
-            d1.spec_data_set.append([wavelength_t, data_t, label_t])
+            d1.spec_wl_data_set.append([wavelength_t, data_t, label_t])
             d1.listboxitems_set.append(d1.indexselected + '_transposed')
             d1.listbox_set.insert(END, d1.listboxitems_set[k])
             d1.listval_set = k + 1
-
 
     def duplicate(self):
         d1 = self.inverse_gui
@@ -737,28 +730,51 @@ class Other_fuc(object):
             dup_data = []
             for i in range(dup):
                 noise = 0.01 * (np.random.normal(0, 1, shape[0]))
-                dup_data.append(data.values.ravel() + noise)
-            dup_data = np.reshape(dup_data, [dup, shape[0]])
-            dup_data = pd.DataFrame(dup_data.T)
+                dup_data.append(data.ravel() + noise)
+            dup_data = np.reshape(dup_data, [shape[0],dup])
             plt.plot(wavelength, dup_data)
 
             k = d1.listval
-            d1.spec_data.append([wavelength, dup_data])
-            d1.listboxitems.append(d1.indexselected + '_duplicate'+str(dup))
+            d1.spec_wl_data.append([wavelength, dup_data])
+            d1.listboxitems.append(d1.indexselected + '_duplicate' + str(dup))
             d1.listbox.insert(END, d1.listboxitems[k])
             d1.listval = k + 1
+
+    def info(self):
+        d1 = self.inverse_gui
+        if d1.choice == 1:
+            start_wl = d1.wavelength[0][0]
+            end_wl = d1.wavelength[-1][0]
+            resolution = (d1.wavelength[2]-d1.wavelength[1])[0]
+            mean_data = np.round(np.mean(d1.spectra),2)
+            simpledialog.messagebox.showinfo(title="Info",
+                                        message= f'file name: {d1.filename} \n'
+                                                 f'starting wavelength: {start_wl} \n'
+                                                 f'ending wavelength: {end_wl} \n'
+                                                 f'Spectral Resolution: {resolution} \n'
+                                                 f'Mean data: {mean_data}')
+        else:
+            start_wl = d1.wavelength_set[0][0]
+            end_wl = d1.wavelength_set[-1][0]
+            resolution = (d1.wavelength_set[2] - d1.wavelength_set[1])[0]
+            mean_data = np.round(np.mean(d1.spectra_set), 2)
+            simpledialog.messagebox.showinfo(title="Info",
+                                             message=f'file name: {d1.filename} \n'
+                                                     f'starting wavelength: {start_wl} \n'
+                                                     f'ending wavelength: {end_wl} \n'
+                                                     f'Spectral Resolution: {resolution} \n'
+                                                     f'Mean data: {mean_data}')
+
 
     def resize(self):
         d1 = self.inverse_gui
         if d1.choice == 1:
             wavelength = d1.wavelength
             data = d1.spectra
-            data = data.values
-            data = data.ravel()
             shape = data.shape
-            wl_min = simpledialog.askfloat("Input","Enter the minimum wavelength within the range")
-            wl_max = simpledialog.askfloat("Input","Enter the maximum wavelength within the range")
-            new_wl = list(filter(lambda x: float(x) >= float(wl_min) and float(x) <= float(wl_max) , wavelength))
+            wl_min = simpledialog.askfloat("Input", "Enter the minimum wavelength within the range")
+            wl_max = simpledialog.askfloat("Input", "Enter the maximum wavelength within the range")
+            new_wl = list(filter(lambda x: float(x) >= float(wl_min) and float(x) <= float(wl_max), wavelength))
             outnew = []
             b = len(wavelength)
             s = len(new_wl)
@@ -773,15 +789,10 @@ class Other_fuc(object):
             plt.plot(new_wl, newX)
 
             k = d1.listval
-            d1.spec_data.append([new_wl, newX])
+            d1.spec_wl_data.append([new_wl, newX])
             d1.listboxitems.append(d1.indexselected + '_Resized')
             d1.listbox.insert(END, d1.listboxitems[k])
             d1.listval = k + 1
-
-
-
-
-
 
 # class Demo():
 #     instance = None
@@ -797,4 +808,3 @@ class Other_fuc(object):
 #
 #         def print_xx(self):
 #             print(self.xx)
-

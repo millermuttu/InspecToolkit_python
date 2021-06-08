@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on 10/6/2021
+Created on 1/6/2021
 
 @author: Mallikarjun sajjan (flyingmuttus)
 """
@@ -10,11 +10,11 @@ import matplotlib
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
-from src.functions import Other_fuc
-from src.read_jdx import load_data, load_dataset
+from src.functions import Functions
+from src.read_files import load_data, load_dataset, loadData
 
 matplotlib.use('TkAgg')
-from tkinter import messagebox, IntVar
+from tkinter import messagebox, IntVar, simpledialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog
 import pandas as pd
@@ -34,16 +34,20 @@ class InverseGUI(object):
         self.listbox_set = None
         self.Result = None
         self.indexselected = None
+        self.toolbarPlot = None
+        self.widgetPlot = None
+        self.filename = None
         self.listval = 0  # number of data values in data list
         self.listval_set = 0  # number of data values in data set list
-        self.spec_data = []  # spectral data + wavelength from data list
-        self.spec_data_set = []  # spectral data +wavelength + label from data set list
+        self.spec_wl_data = []  # spectral data + wavelength from data list
+        self.spec_wl_data_set = []  # spectral data +wavelength + label from data set list
         self.listboxitems = []  # list of data in listboxitems
         self.listboxitems_set = []  # list of data set in listboxitems_set
         self.spectra = []  # spectral data from datalist
         self.spectra_set = []  # wavelength from data set list
         self.wavelength = []  # wavelength from datalist
         self.wavelength_set = []  # spectral data from data set list
+        self.filename = ''
         self.choice = 1
 
         self.canvas = Canvas(
@@ -55,7 +59,7 @@ class InverseGUI(object):
             highlightthickness=0,
             relief="ridge")
         self.canvas.place(x=0, y=0)
-        self.other_func = Other_fuc(self)  # to import all the functions from other_func class
+        self.other_func = Functions(self)  # to import all the functions from other_func class
         self.createMenu()  # to initiate createMenu function
         self.createToolbar()  # to initiate createToolbar functio
         self.createFigure()  # to initiate createFigure functio
@@ -135,6 +139,17 @@ class InverseGUI(object):
             height=380)
 
     def plotFigure(self):
+
+        # destroy cuurent toolbar and widget for plot to refresh the plotarea.
+        if self.toolbarPlot:
+            self.toolbarPlot.destroy()
+        if self.widgetPlot:
+            self.widgetPlot.destroy()
+
+        # create figure to plot
+        fig = Figure(figsize=(5, 5), dpi=100)
+        self.plotPtr = fig.add_subplot(111)
+
         if self.choice == 1:
             self.plotPtr.clear()
             self.plotPtr.plot(self.wavelength, self.spectra)
@@ -143,18 +158,19 @@ class InverseGUI(object):
             self.plotPtr.set_ylabel('Intensity')
         elif self.choice == 2:
             self.plotPtr.clear()
-            self.plotPtr.plot(self.wavelength_set, self.spectra_set, labels=self.label)
+            for y,label in zip(self.spectra_set.T,self.label[0]):
+                self.plotPtr.plot(self.wavelength_set, y, label=label)
+            self.plotPtr.legend()
             self.plotPtr.set_title('RAW ADC Spectra')
             self.plotPtr.set_xlabel('Wavelength')
             self.plotPtr.set_ylabel('Intensity')
 
-        toolbar1 = NavigationToolbar2Tk(self.canvas_figure, self.master)
-        toolbar1.update()
+        self.canvas_figure = FigureCanvasTkAgg(fig, self.master)
+        self.toolbarPlot = NavigationToolbar2Tk(self.canvas_figure, self.master)
+        # self.toolbarPlot.update()
         # placing the toolbar on the Tkinter window
-        self.canvas_figure.get_tk_widget().place(
-            x=469.0, y=100,
-            width=504.0,
-            height=380)
+        self.widgetPlot = self.canvas_figure.get_tk_widget()
+        self.widgetPlot.place(x=469.0, y=100,width=504.0,height=380)
 
     def createToolbar(self):
 
@@ -164,15 +180,33 @@ class InverseGUI(object):
             fill="#ec1a1a",
             font=("RibeyeMarrow-Regular", int(48.0)))
 
-        loaddataButton = Button(self.master, text="Load data", command=self.import_data)
+        loaddataButton = Button(self.master, text="Load Data", command=self.import_data)
         loaddataButton.place(
-            x=243, y=107,
+            x=240, y=100,
             width=150,
             height=50)
 
-        loaddata_set_Button = Button(self.master, text="Load dataset", command=self.import_csvset)
+        loaddata_set_Button = Button(self.master, text="Load Dataset", command=self.import_dataset)
         loaddata_set_Button.place(
-            x=243, y=178,
+            x=240, y=170,
+            width=150,
+            height=50)
+
+        exportResultButton = Button(self.master, text="Export to excel", command=self.export_excel)
+        exportResultButton.place(
+            x=240, y=240,
+            width=150,
+            height=50)
+
+        plotButton = Button(self.master, text="Plot", command=self.plotFigure)
+        plotButton.place(
+            x=240, y=310,
+            width=150,
+            height=50)
+
+        infoButton = Button(self.master, text="Info", command=self.other_func.info)
+        infoButton.place(
+            x=240, y=380,
             width=150,
             height=50)
 
@@ -180,54 +214,47 @@ class InverseGUI(object):
         # fomButton.pack(side=LEFT)
         # simuButton = Button(toolbar, text="Simulation",command=None)
         # simuButton.pack(side=LEFT)
-
-        exportResultButton = Button(self.master, text="Export to excel", command=self.export_excel)
-        exportResultButton.place(
-            x=243, y=246,
-            width=150,
-            height=50)
-
-        plotButton = Button(self.master, text="Plot", command=self.plotFigure)
-        plotButton.place(
-            x=243, y=318,
-            width=150,
-            height=50)
-
         # overlapCheckbox = Checkbutton(toolbar, text="Overlap ?", variable=self.varoverlap)
         # overlapCheckbox.pack(side=RIGHT, padx=1, pady=1)
 
         self.canvas.create_text(
             115, 100.0,
-            text="Data",
+            text="Data panel",
             fill="#4c27de",
             font=("Abel-Regular", int(18.0)))
 
         self.canvas.create_text(
-            115.0, 400.0,
-            text="Data Set",
+            115.0, 410.0,
+            text="Data Set panel",
             fill="#4c27de",
             font=("Abel-Regular", int(18.0)))
 
         frame_listbox = Frame(self.master)
         frame_listbox.place(x=30, y=120)  # Position of where you would place your listbox
-        scrollbar = Scrollbar(frame_listbox, orient=VERTICAL)
+        scrollbarV = Scrollbar(frame_listbox, orient=VERTICAL)
+        scrollbarH = Scrollbar(frame_listbox, orient=HORIZONTAL)
         self.listbox = Listbox(frame_listbox, width=25, height=15, bg='#f2f8e1')
-        self.listbox.config(yscrollcommand=scrollbar.set)
+        self.listbox.config(yscrollcommand=scrollbarV.set,xscrollcommand = scrollbarH.set)
         self.listbox.bind('<<ListboxSelect>>', self.onselect_listbox)
-        scrollbar.config(command=self.listbox.yview)
-        scrollbar.pack(side=RIGHT, fill='y')
+        scrollbarV.config(command=self.listbox.yview)
+        scrollbarH.config(command=self.listbox.xview)
+        scrollbarV.pack(side=RIGHT, fill='y')
+        scrollbarH.pack(side=BOTTOM,fill='x')
         # self.listbox.place(x=37.0, y=119)
         self.listbox.pack(side = TOP)
 
         frame_listbox_set = Frame(self.master)
-        frame_listbox_set.place(x=30, y=430)  # Position of where you would place your listbox
-        scrollbar_set = Scrollbar(frame_listbox_set, orient=VERTICAL)
+        frame_listbox_set.place(x=30, y=430)  # Position of where you would place your listbox_set
+        scrollbar_setV = Scrollbar(frame_listbox_set, orient=VERTICAL)
+        scrollbar_setH = Scrollbar(frame_listbox_set, orient=HORIZONTAL)
         self.listbox_set = Listbox(frame_listbox_set, width=25, height=15, bg='#f2f8e1')
-        self.listbox.config(yscrollcommand=scrollbar_set.set)
+        self.listbox_set.config(yscrollcommand=scrollbar_setV.set, xscrollcommand=scrollbar_setH.set)
         self.listbox_set.bind('<<ListboxSelect>>', self.onselect_listbox_set)
-        scrollbar_set.config(command=self.listbox_set.yview)
-        scrollbar_set.pack(side=RIGHT, fill='y')
-        self.listbox_set.place(x=35.0, y=413)
+        scrollbar_setV.config(command=self.listbox_set.yview)
+        scrollbar_setH.config(command=self.listbox_set.xview)
+        scrollbar_setV.pack(side=RIGHT, fill='y')
+        scrollbar_setH.pack(side=BOTTOM, fill='x')
+        # self.listbox_set.place(x=35.0, y=413)
         self.listbox_set.pack(side = BOTTOM)
 
         resultbar = Frame(self.master, width=720, height=150, bg='#f2f8e1')
@@ -246,9 +273,9 @@ class InverseGUI(object):
         print(index)
         print(self.indexselected)
         self.choice = 1  # make choice as 1 indicating single data
-        onselect_data = self.spec_data[index]
-        self.spectra = onselect_data[1]  # select spectra from spec_data
-        self.wavelength = onselect_data[0]  # select wavelength from spec_data
+        onselect_data = self.spec_wl_data[index]
+        self.spectra = onselect_data[1]  # select spectra from spec_wl_data
+        self.wavelength = onselect_data[0]  # select wavelength from spec_wl_data
 
     def onselect_listbox_set(self, evt):
         w = evt.widget
@@ -257,8 +284,8 @@ class InverseGUI(object):
         print(index)
         print(self.indexselected)
         self.choice = 2  # make choice as 2 indicating dataset
-        onselect_data = self.spec_data_set[index]
-        print(onselect_data)
+        onselect_data = self.spec_wl_data_set[index]
+        # print(onselect_data)
         self.spectra_set = onselect_data[1]
         self.wavelength_set = onselect_data[0]
         self.label = onselect_data[2]
@@ -269,31 +296,53 @@ class InverseGUI(object):
 
     # function to import data from .CSV and .JDX function for single spectral data
     def import_data(self):
-        data_jdx, data_csv = load_data()
-        if data_csv != []:  # check if data is from CSV
-            Wavelength = data_csv[0]  # seperate wavelength and spectra
-            data = data_csv[1]
-            for k in range(data.shape[1]):
-                self.spec_data.append([Wavelength, data.iloc[:, k:k + 1]])  # append data to spec_data
-                self.listboxitems.append("Spectra" + str(self.listval + k))  # append name of spectra to listboxitems
-                self.listbox.insert(END, self.listboxitems[self.listval + k])  # insert name of spectra to listbox
-            self.listval = self.listval + data.shape[1]  # increment listval by number of individual spectras uploaded.
-        elif data_jdx != []:  # check if data is from JDX
-            Wavelength = data_jdx[0]  # seperate wavelength and spectra
-            data = data_jdx[1]
-            self.spec_data.append([Wavelength.values, data.values])  # append data to spec_data
-            self.listboxitems.append("Spectra" + str(self.listval + 1))  # append name of spectra to listbox
-            self.listbox.insert(END, self.listboxitems[self.listval])  # insert name of spectra to listbox
-            self.listval = self.listval + 1  # increment listval By 1 since jdx contains only one spectras
+        datafromfile = loadData()
+        if len(datafromfile)>0:
+            Wavelength = datafromfile[0]
+            Data = datafromfile[1]
+            self.filename = datafromfile[2]
+            if len(datafromfile)>0 and Data.shape[1] > 1:
+                for k in range(Data.shape[1]):
+                    self.spec_wl_data.append([Wavelength, Data[:, k:k + 1]])  # append data to spec_wl_data
+                    self.listboxitems.append(f'{self.filename[:-4]}_{(self.listval + k)}')  # append name of spectra to listboxitems
+                    self.listbox.insert(END, self.listboxitems[self.listval + k])  # insert name of spectra to listbox
+                self.listval = self.listval + Data.shape[1]  # increment listval by number of individual spectras uploaded.
+            elif len(datafromfile)>0 and Data.shape[1] ==1:
+                data = datafromfile[1]
+                self.filename = datafromfile[2]
+                self.spec_wl_data.append([Wavelength, data])  # append data to spec_wl_data
+                self.listboxitems.append(f'{self.filename[:-4]}_{str(self.listval + 1)}')  # append name of spectra to listbox
+                self.listbox.insert(END, self.listboxitems[self.listval])  # insert name of spectra to listbox
+                self.listval = self.listval + 1  # increment listval By 1 since jdx contains only one spectras
+        else:
+            simpledialog.messagebox.showerror("Error", "Data load failed!")
 
-    def import_csvset(self):
+        # data_jdx, data_csv = load_data()
+        # if data_csv != []:  # check if data is from CSV
+        #     Wavelength = data_csv[0]  # seperate wavelength and spectra
+        #     data = data_csv[1]
+        #     self.filename = data_csv[2]
+        #     for k in range(data.shape[1]):
+        #         self.spec_wl_data.append([Wavelength, data.iloc[:, k:k + 1]])  # append data to spec_wl_data
+        #         self.listboxitems.append(f'{self.filename}_{(self.listval + k)}')  # append name of spectra to listboxitems
+        #         self.listbox.insert(END, self.listboxitems[self.listval + k])  # insert name of spectra to listbox
+        #     self.listval = self.listval + data.shape[1]  # increment listval by number of individual spectras uploaded.
+        # elif data_jdx != []:  # check if data is from JDX
+        #     Wavelength = data_jdx[0]  # seperate wavelength and spectra
+        #     data = data_jdx[1]
+        #     self.filename = data_jdx[2]
+        #     self.spec_wl_data.append([Wavelength.values, data.values])  # append data to spec_wl_data
+        #     self.listboxitems.append(f'{self.filename}_{str(self.listval + 1)}')  # append name of spectra to listbox
+        #     self.listbox.insert(END, self.listboxitems[self.listval])  # insert name of spectra to listbox
+        #     self.listval = self.listval + 1  # increment listval By 1 since jdx contains only one spectras
+
+    def import_dataset(self):
         dataset_csv = load_dataset()
         # wavelength = dataset_csv[0]
         # data = dataset_csv[1]
-        self.spec_data_set.append(dataset_csv)  # append data to spec_data_set
-        self.listboxitems_set.append("Dataset" + str(self.listval_set))  # append name of data set to listboxitems set
-        self.listbox_set.insert(END,
-                                self.listboxitems_set[self.listval_set])  # insert the name of data set to listboxset
+        self.spec_wl_data_set.append(dataset_csv)  # append data to spec_wl_data_set
+        self.listboxitems_set.append(f'Dataset_{str(self.listval_set)}')  # append name of data set to listboxitems set
+        self.listbox_set.insert(END,self.listboxitems_set[self.listval_set])  # insert the name of data set to listboxset
         self.listval_set = self.listval_set + 1  # increment listval_set by 1
 
     # function to export data from listbox and listboxsset to excel
@@ -328,6 +377,24 @@ class InverseGUI(object):
                 result.to_excel(writer)
             messagebox.showinfo("Success",
                                 "spectra stored in result.xlsx file under selected directory")  # info to user once saving is complete
+
+    def plot_fig(self, x, data):
+        # if self.varoverlap.get() == 0:
+        #     plt.clf()
+        plt.clf()
+        plt.plot(x, data)
+        plt.legend()
+        plt.title('RAW ADC Spectra')
+        plt.xlabel('Wavelength in micrometer')
+        plt.ylabel('Raw ADC')
+
+    def plot_fig_dataset(self, x, data, label):
+        plt.clf()
+        plt.plot(x, data, label=label)
+        plt.legend()
+        plt.title('RAW ADC Spectra')
+        plt.xlabel('Wavelength in micrometer')
+        plt.ylabel('Raw ADC')
 
     # incomplete function
     def addition(self):
