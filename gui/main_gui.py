@@ -4,9 +4,11 @@ Created on 1/6/2021
 
 @author: Mallikarjun sajjan (flyingmuttus)
 """
+import os
 from tkinter import *
 
 import matplotlib
+import scipy.io
 from matplotlib.backends._backend_tk import NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
@@ -63,6 +65,7 @@ class InverseGUI(object):
         self.createMenu()  # to initiate createMenu function
         self.createToolbar()  # to initiate createToolbar functio
         self.createFigure()  # to initiate createFigure functio
+        self.loadMat()
 
     def createMenu(self):
         menu = Menu(self.master)
@@ -340,8 +343,9 @@ class InverseGUI(object):
         dataset_csv = load_dataset()
         # wavelength = dataset_csv[0]
         # data = dataset_csv[1]
+        self.filename = dataset_csv[3]
         self.spec_wl_data_set.append(dataset_csv)  # append data to spec_wl_data_set
-        self.listboxitems_set.append(f'Dataset_{str(self.listval_set)}')  # append name of data set to listboxitems set
+        self.listboxitems_set.append(f'Dataset_{self.filename[:-4]}')  # append name of data set to listboxitems set
         self.listbox_set.insert(END,self.listboxitems_set[self.listval_set])  # insert the name of data set to listboxset
         self.listval_set = self.listval_set + 1  # increment listval_set by 1
 
@@ -395,6 +399,28 @@ class InverseGUI(object):
         plt.title('RAW ADC Spectra')
         plt.xlabel('Wavelength in micrometer')
         plt.ylabel('Raw ADC')
+
+    def loadMat(self):
+        # loading dataset for demo
+        filepath = "../demodata/set.mat"
+        if os.path.isfile(filepath):
+            mat = scipy.io.loadmat(filepath)
+            wavelength = mat['label']
+            label = mat['Y']
+            data = mat['X'].T
+            self.filename = 'Demo'
+            self.spec_wl_data_set.append([wavelength, data, [label],self.filename])  # append data to spec_wl_data
+            self.listboxitems_set.append(f'Dataset_{str(self.filename)}')  # append name of data set to listboxitems set
+            self.listbox_set.insert(END,
+                                    self.listboxitems_set[self.listval_set])  # insert the name of data set to listboxset
+            self.listval_set = self.listval_set + 1  # increment listval_set by 1
+
+            # Loading individual data for demo
+            self.filename = 'Data_demo'
+            self.spec_wl_data.append([wavelength, data[1]])  # append data to spec_wl_data
+            self.listboxitems.append(f'{self.filename}')  # append name of spectra to listbox
+            self.listbox.insert(END, self.listboxitems[self.listval])  # insert name of spectra to listbox
+            self.listval = self.listval + 1  # increment listval By 1 since jdx contains only one spectras
 
     # incomplete function
     def addition(self):

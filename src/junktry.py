@@ -25,6 +25,14 @@ def loadData():
 def loadMat():
     filepath = r"E:\Inspec\matlab_version\Inv_spec_gui\DEMO_DATA\AS_Demo.mat"
     mat = scipy.io.loadmat(filepath)
+    wavelength = mat['label']
+    label = mat['Y']
+    data = mat['X'].T
+    # self.filename = 'Demo_setdata'
+    # self.spec_wl_data.append([wavelength, data,label])  # append data to spec_wl_data
+    # self.listboxitems.append(f'{self.filename[:-4]}_{str(self.listval + 1)}')  # append name of spectra to listbox
+    # self.listbox.insert(END, self.listboxitems[self.listval])  # insert name of spectra to listbox
+    # self.listval = self.listval + 1  # increment listval By 1 since jdx contains only one spectras
 
 
 
@@ -32,3 +40,6 @@ if __name__=="__main__":
     loadData()
     filepath = r"E:\Inspec\matlab_version\Inv_spec_gui\DEMO_DATA\set.mat"
     mat = scipy.io.loadmat(filepath)
+    wavelength = mat['label']
+    label = mat['Y']
+    data = mat['X'].T

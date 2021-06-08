@@ -745,7 +745,7 @@ class Functions(object):
         if d1.choice == 1:
             start_wl = d1.wavelength[0][0]
             end_wl = d1.wavelength[-1][0]
-            resolution = (d1.wavelength[2]-d1.wavelength[1])[0]
+            resolution = np.round((d1.wavelength[2]-d1.wavelength[1])[0],2)
             mean_data = np.round(np.mean(d1.spectra),2)
             simpledialog.messagebox.showinfo(title="Info",
                                         message= f'file name: {d1.filename} \n'
