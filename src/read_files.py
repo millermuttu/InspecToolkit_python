@@ -87,6 +87,6 @@ def load_dataset():
     else:
         Wavelength = df.iloc[1:, :1].values  # wavelength selecting all rows from 1 to end and all the columns till 0 to 1
         data = df.iloc[1:, 1:].values  # data selecting all the rows from 1 to end and all the columns after 1 to end
-        label = df.iloc[0:1, 1:].values  # label selecting first row and all the columns from 1 to end
+        label = df.iloc[0:1, 1:].values.T  # label selecting first row and all the columns from 1 to end
         dataset_csv = [Wavelength, data, label,filename]
     return dataset_csv

@@ -65,7 +65,7 @@ class InverseGUI(object):
         self.createMenu()  # to initiate createMenu function
         self.createToolbar()  # to initiate createToolbar functio
         self.createFigure()  # to initiate createFigure functio
-        self.loadMat()
+        self.loadDemoData()
 
     def createMenu(self):
         menu = Menu(self.master)
@@ -161,7 +161,7 @@ class InverseGUI(object):
             self.plotPtr.set_ylabel('Intensity')
         elif self.choice == 2:
             self.plotPtr.clear()
-            for y,label in zip(self.spectra_set.T,self.label[0]):
+            for y,label in zip(self.spectra_set.T,self.label):
                 self.plotPtr.plot(self.wavelength_set, y, label=label)
             self.plotPtr.legend()
             self.plotPtr.set_title('RAW ADC Spectra')
@@ -271,27 +271,29 @@ class InverseGUI(object):
 
     def onselect_listbox(self, evt):
         w = evt.widget
-        index = int(w.curselection()[0])  # to get the index of selected data from data list
-        self.indexselected = w.get(index)  # get the name of data list selected
-        print(index)
-        print(self.indexselected)
-        self.choice = 1  # make choice as 1 indicating single data
-        onselect_data = self.spec_wl_data[index]
-        self.spectra = onselect_data[1]  # select spectra from spec_wl_data
-        self.wavelength = onselect_data[0]  # select wavelength from spec_wl_data
+        if w.curselection():
+            index = int(w.curselection()[0])  # to get the index of selected data from data list
+            self.indexselected = w.get(index)  # get the name of data list selected
+            print(index)
+            print(self.indexselected)
+            self.choice = 1  # make choice as 1 indicating single data
+            onselect_data = self.spec_wl_data[index]
+            self.spectra = onselect_data[1]  # select spectra from spec_wl_data
+            self.wavelength = onselect_data[0]  # select wavelength from spec_wl_data
 
     def onselect_listbox_set(self, evt):
-        w = evt.widget
-        index = int(w.curselection()[0])
-        self.indexselected = w.get(index)
-        print(index)
-        print(self.indexselected)
-        self.choice = 2  # make choice as 2 indicating dataset
-        onselect_data = self.spec_wl_data_set[index]
-        # print(onselect_data)
-        self.spectra_set = onselect_data[1]
-        self.wavelength_set = onselect_data[0]
-        self.label = onselect_data[2]
+        w_set = evt.widget
+        if w_set.curselection():
+            index = int(w_set.curselection()[0])
+            self.indexselected = w_set.get(index)
+            print(index)
+            print(self.indexselected)
+            self.choice = 2  # make choice as 2 indicating dataset
+            onselect_data = self.spec_wl_data_set[index]
+            # print(onselect_data)
+            self.spectra_set = onselect_data[1]
+            self.wavelength_set = onselect_data[0]
+            self.label = onselect_data[2]
 
     def About(self):
         print("This is a simple gui for inverese spectra")
@@ -400,16 +402,17 @@ class InverseGUI(object):
         plt.xlabel('Wavelength in micrometer')
         plt.ylabel('Raw ADC')
 
-    def loadMat(self):
-        # loading dataset for demo
+    def loadDemoData(self):
+
         filepath = "../demodata/set.mat"
         if os.path.isfile(filepath):
+            # loading dataset for demo
             mat = scipy.io.loadmat(filepath)
             wavelength = mat['label']
             label = mat['Y']
             data = mat['X'].T
             self.filename = 'Demo'
-            self.spec_wl_data_set.append([wavelength, data, [label],self.filename])  # append data to spec_wl_data
+            self.spec_wl_data_set.append([wavelength, data, label,self.filename])  # append data to spec_wl_data
             self.listboxitems_set.append(f'Dataset_{str(self.filename)}')  # append name of data set to listboxitems set
             self.listbox_set.insert(END,
                                     self.listboxitems_set[self.listval_set])  # insert the name of data set to listboxset
