@@ -22,6 +22,19 @@ def loadData():
 
     return loadedData
 
+def loaddaset():
+    dataset_csv = []
+    filepath = r"E:\inspec_python\test_files\Book1.csv"
+    filename = os.path.basename(filepath)
+    df = pd.read_csv(filepath, header=None, sep=',')
+
+    Wavelength = df.iloc[1:,
+                 :1].values  # wavelength selecting all rows from 1 to end and all the columns till 0 to 1
+    data = df.iloc[1:, 1:].values  # data selecting all the rows from 1 to end and all the columns after 1 to end
+    label = df.iloc[0:1, 1:].values  # label selecting first row and all the columns from 1 to end
+    dataset_csv = [Wavelength, data, label, filename]
+    return dataset_csv
+
 def loadMat():
     filepath = r"E:\Inspec\matlab_version\Inv_spec_gui\DEMO_DATA\AS_Demo.mat"
     mat = scipy.io.loadmat(filepath)
@@ -38,6 +51,7 @@ def loadMat():
 
 if __name__=="__main__":
     loadData()
+    loaddaset()
     filepath = r"E:\Inspec\matlab_version\Inv_spec_gui\DEMO_DATA\set.mat"
     mat = scipy.io.loadmat(filepath)
     wavelength = mat['label']

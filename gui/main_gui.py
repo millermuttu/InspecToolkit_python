@@ -15,7 +15,7 @@ from matplotlib.figure import Figure
 from src.functions import Functions
 from src.read_files import load_data, load_dataset, loadData
 
-matplotlib.use('TkAgg')
+matplotlib.use('Qt5Agg')
 from tkinter import messagebox, IntVar, simpledialog
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import filedialog
@@ -65,7 +65,7 @@ class InverseGUI(object):
         self.createMenu()  # to initiate createMenu function
         self.createToolbar()  # to initiate createToolbar functio
         self.createFigure()  # to initiate createFigure functio
-        self.loadMat()
+        self.loadDemoData()
 
     def createMenu(self):
         menu = Menu(self.master)
@@ -161,7 +161,7 @@ class InverseGUI(object):
             self.plotPtr.set_ylabel('Intensity')
         elif self.choice == 2:
             self.plotPtr.clear()
-            for y,label in zip(self.spectra_set.T,self.label[0]):
+            for y,label in zip(self.spectra_set.T,self.label):
                 self.plotPtr.plot(self.wavelength_set, y, label=label)
             self.plotPtr.legend()
             self.plotPtr.set_title('RAW ADC Spectra')
@@ -185,31 +185,31 @@ class InverseGUI(object):
 
         loaddataButton = Button(self.master, text="Load Data", command=self.import_data)
         loaddataButton.place(
-            x=240, y=100,
+            x=280, y=100,
             width=150,
             height=50)
 
         loaddata_set_Button = Button(self.master, text="Load Dataset", command=self.import_dataset)
         loaddata_set_Button.place(
-            x=240, y=170,
+            x=280, y=170,
             width=150,
             height=50)
 
         exportResultButton = Button(self.master, text="Export to excel", command=self.export_excel)
         exportResultButton.place(
-            x=240, y=240,
+            x=280, y=240,
             width=150,
             height=50)
 
         plotButton = Button(self.master, text="Plot", command=self.plotFigure)
         plotButton.place(
-            x=240, y=310,
+            x=280, y=310,
             width=150,
             height=50)
 
         infoButton = Button(self.master, text="Info", command=self.other_func.info)
         infoButton.place(
-            x=240, y=380,
+            x=280, y=380,
             width=150,
             height=50)
 
@@ -221,22 +221,22 @@ class InverseGUI(object):
         # overlapCheckbox.pack(side=RIGHT, padx=1, pady=1)
 
         self.canvas.create_text(
-            115, 100.0,
+            115, 60.0,
             text="Data panel",
             fill="#4c27de",
             font=("Abel-Regular", int(18.0)))
 
         self.canvas.create_text(
-            115.0, 410.0,
+            130.0, 400.0,
             text="Data Set panel",
             fill="#4c27de",
             font=("Abel-Regular", int(18.0)))
 
         frame_listbox = Frame(self.master)
-        frame_listbox.place(x=30, y=120)  # Position of where you would place your listbox
+        frame_listbox.place(x=30, y=80)  # Position of where you would place your listbox
         scrollbarV = Scrollbar(frame_listbox, orient=VERTICAL)
         scrollbarH = Scrollbar(frame_listbox, orient=HORIZONTAL)
-        self.listbox = Listbox(frame_listbox, width=25, height=15, bg='#f2f8e1')
+        self.listbox = Listbox(frame_listbox, width=25, height=12, bg='#f2f8e1')
         self.listbox.config(yscrollcommand=scrollbarV.set,xscrollcommand = scrollbarH.set)
         self.listbox.bind('<<ListboxSelect>>', self.onselect_listbox)
         scrollbarV.config(command=self.listbox.yview)
@@ -247,10 +247,10 @@ class InverseGUI(object):
         self.listbox.pack(side = TOP)
 
         frame_listbox_set = Frame(self.master)
-        frame_listbox_set.place(x=30, y=430)  # Position of where you would place your listbox_set
+        frame_listbox_set.place(x=30, y=415)  # Position of where you would place your listbox_set
         scrollbar_setV = Scrollbar(frame_listbox_set, orient=VERTICAL)
         scrollbar_setH = Scrollbar(frame_listbox_set, orient=HORIZONTAL)
-        self.listbox_set = Listbox(frame_listbox_set, width=25, height=15, bg='#f2f8e1')
+        self.listbox_set = Listbox(frame_listbox_set, width=25, height=12, bg='#f2f8e1')
         self.listbox_set.config(yscrollcommand=scrollbar_setV.set, xscrollcommand=scrollbar_setH.set)
         self.listbox_set.bind('<<ListboxSelect>>', self.onselect_listbox_set)
         scrollbar_setV.config(command=self.listbox_set.yview)
@@ -262,36 +262,38 @@ class InverseGUI(object):
 
         resultbar = Frame(self.master, width=720, height=150, bg='#f2f8e1')
         self.canvas.create_text(
-            300, 500,
+            340, 500,
             text="Result:",
             fill="#4c27de",
             font=("Abel-Regular", int(24.0)))
-        resultbar.place(x=249.0, y=517)
+        resultbar.place(x=280.0, y=517)
         # resultbar.pack()
 
     def onselect_listbox(self, evt):
         w = evt.widget
-        index = int(w.curselection()[0])  # to get the index of selected data from data list
-        self.indexselected = w.get(index)  # get the name of data list selected
-        print(index)
-        print(self.indexselected)
-        self.choice = 1  # make choice as 1 indicating single data
-        onselect_data = self.spec_wl_data[index]
-        self.spectra = onselect_data[1]  # select spectra from spec_wl_data
-        self.wavelength = onselect_data[0]  # select wavelength from spec_wl_data
+        if w.curselection():
+            index = int(w.curselection()[0])  # to get the index of selected data from data list
+            self.indexselected = w.get(index)  # get the name of data list selected
+            print(index)
+            print(self.indexselected)
+            self.choice = 1  # make choice as 1 indicating single data
+            onselect_data = self.spec_wl_data[index]
+            self.spectra = onselect_data[1]  # select spectra from spec_wl_data
+            self.wavelength = onselect_data[0]  # select wavelength from spec_wl_data
 
     def onselect_listbox_set(self, evt):
-        w = evt.widget
-        index = int(w.curselection()[0])
-        self.indexselected = w.get(index)
-        print(index)
-        print(self.indexselected)
-        self.choice = 2  # make choice as 2 indicating dataset
-        onselect_data = self.spec_wl_data_set[index]
-        # print(onselect_data)
-        self.spectra_set = onselect_data[1]
-        self.wavelength_set = onselect_data[0]
-        self.label = onselect_data[2]
+        w_set = evt.widget
+        if w_set.curselection():
+            index = int(w_set.curselection()[0])
+            self.indexselected = w_set.get(index)
+            print(index)
+            print(self.indexselected)
+            self.choice = 2  # make choice as 2 indicating dataset
+            onselect_data = self.spec_wl_data_set[index]
+            # print(onselect_data)
+            self.spectra_set = onselect_data[1]
+            self.wavelength_set = onselect_data[0]
+            self.label = onselect_data[2]
 
     def About(self):
         print("This is a simple gui for inverese spectra")
@@ -400,16 +402,17 @@ class InverseGUI(object):
         plt.xlabel('Wavelength in micrometer')
         plt.ylabel('Raw ADC')
 
-    def loadMat(self):
-        # loading dataset for demo
+    def loadDemoData(self):
+
         filepath = "../demodata/set.mat"
         if os.path.isfile(filepath):
+            # loading dataset for demo
             mat = scipy.io.loadmat(filepath)
             wavelength = mat['label']
             label = mat['Y']
             data = mat['X'].T
             self.filename = 'Demo'
-            self.spec_wl_data_set.append([wavelength, data, [label],self.filename])  # append data to spec_wl_data
+            self.spec_wl_data_set.append([wavelength, data, label,self.filename])  # append data to spec_wl_data
             self.listboxitems_set.append(f'Dataset_{str(self.filename)}')  # append name of data set to listboxitems set
             self.listbox_set.insert(END,
                                     self.listboxitems_set[self.listval_set])  # insert the name of data set to listboxset

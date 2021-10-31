@@ -109,7 +109,7 @@ class Functions(object):
             pca = PCA(n_components=ncomp)  # call PCA inuilt function
             pc = pca.fit_transform(data)  # apply PCA object on the data
             plt.clf()  # clear all the plots
-            plt.subplot(221)
+            plt.subplot(1,2,1)
             plt.plot(np.cumsum(pca.explained_variance_ratio_))
             plt.xlabel('number of components')
             plt.ylabel('cumulative explained variance');
@@ -120,17 +120,17 @@ class Functions(object):
 
             df_expvar = pd.DataFrame({'var': pca.explained_variance_ratio_,
                                       'PC': pc_column})
-            plt.subplot(222)
+            plt.subplot(1,2,2)
             sns.barplot(x='PC', y="var",
                         data=df_expvar, color="c");
 
-            plt.subplot(223)
             sns.lmplot(x="PC0", y="PC1",
                        data=pc_df,
                        fit_reg=False,
                        hue='Cluster',  # color by cluster
                        legend=True,
                        scatter_kws={"s": 80});
+            plt.title("PCA components cluster")
         else:
             simpledialog.messagebox.showerror("Error", "PCA need batch data to function!")
 
@@ -739,6 +739,8 @@ class Functions(object):
             d1.listboxitems.append(d1.indexselected + '_duplicate' + str(dup))
             d1.listbox.insert(END, d1.listboxitems[k])
             d1.listval = k + 1
+        if d1.choice == 2:
+            simpledialog.messagebox.showerror("Error", "Duplicate is only for single data!")
 
     def info(self):
         d1 = self.inverse_gui
@@ -756,7 +758,7 @@ class Functions(object):
         else:
             start_wl = d1.wavelength_set[0][0]
             end_wl = d1.wavelength_set[-1][0]
-            resolution = (d1.wavelength_set[2] - d1.wavelength_set[1])[0]
+            resolution = np.round((d1.wavelength_set[2] - d1.wavelength_set[1])[0],2)
             mean_data = np.round(np.mean(d1.spectra_set), 2)
             simpledialog.messagebox.showinfo(title="Info",
                                              message=f'file name: {d1.filename} \n'
