@@ -455,7 +455,7 @@ def quit():
 if __name__ == "__main__":
     start_time = time.time()
     window = Tk()
-    logo = PhotoImage(file='images/iconbitmap.gif')
+    logo = PhotoImage(file='gui/images/iconbitmap.gif')
     window.call('wm', 'iconphoto', window._w, logo)
     window.title("Inspec spectrometer toolkit 1.0.0")
     window.geometry("1009x722")
